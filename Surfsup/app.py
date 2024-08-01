@@ -57,10 +57,18 @@ def precipitation():
     precipitation_query = session.query(measurement.date, measurement.prcp)\
         .filter(measurement.date >= year_prior).all()
     
+    # Reformat data in order to jsonify
+    precipitation_dates = []
+    for date, precipitation in precipitation_query:
+        prcp_date_dict = {}
+        prcp_date_dict["date"] = date
+        prcp_date_dict["prcp"] = precipitation
+        precipitation_dates.append(prcp_date_dict)
+
     # Close our session
     session.close()
     
-    return jsonify()
+    return jsonify(precipitation_dates)
 
 @app.route("/api/v1.0/stations")
 def stations():
@@ -68,12 +76,25 @@ def stations():
     session = Session(bind=engine)
 
     # Query
-    station_query = session.query(station).all()
+    station_query = session.query(station.id, station.station, station.name,\
+                station.latitude, station.longitude, station.elevation).all()
+
+    # Reformat data in order to jsonify
+    station_data = []
+    for id, stat, name, lat, lng, elev in station_query:
+        station_dict = {}
+        station_dict["id"] = id
+        station_dict["station"] = stat
+        station_dict["name"] = name
+        station_dict["latitude"] = lat
+        station_dict["longitude"] = lng
+        station_dict["elevation"] = elev
+        station_data.append(station_dict)
 
     # Close our session
     session.close()
     
-    return jsonify()
+    return jsonify(station_data)
 
 @app.route("/api/v1.0/tobs")
 def tobs():
@@ -89,18 +110,34 @@ def tobs():
         .filter(measurement.date >= year_prior)\
         .filter(measurement.station == "USC00519281").all()
     
+    # Reformat data in order to jsonify
+    tobs_dates = []
+    for date, tobs in tobs_query:
+        tobs_dict = {}
+        tobs_dict["date"] = date
+        tobs_dict["tobs"] = tobs
+        tobs_dates.append(tobs_dict)
+
     # Close our session
     session.close()
     
-    return jsonify()
+    return jsonify(tobs_dates)
 
 @app.route("/api/v1.0/<start>")
 def date_start():
-    return
+    # Create our session (link) from Python to the DB
+    session = Session(bind=engine)
+    # Close our session
+    session.close()
+    return jsonify()
 
 @app.route("/api/v1.0/<start>/<end>")
 def date_start_end():
-    return
+    # Create our session (link) from Python to the DB
+    session = Session(bind=engine)
+    # Close our session
+    session.close()
+    return jsonify()
 
 
 if __name__ == "__main__":
