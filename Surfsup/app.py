@@ -35,13 +35,17 @@ app = Flask(__name__)
 @app.route("/")
 def home():
     return (
-        f"Welcome!<br/>"
-        f"Available routes are the following:<br/>"
-        f"/api/v1.0/precipitation<br/>"
-        f"/api/v1.0/stations<br/>"
-        f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/<start><br/>"
-        f"/api/v1.0/<start>/<end>"
+        f"Welcome! <br/>"
+        f"<br/>"
+        f"Please enter start/end dates in YYYY-MM-DD format. <br/>"
+        f"Start/end dates can range from 2010-01-01 to 2017-08-23 <br/>"
+        f"<br/>"
+        f"Available routes are the following: <br/>"
+        f"/api/v1.0/precipitation <br/>"
+        f"/api/v1.0/stations <br/>"
+        f"/api/v1.0/tobs <br/>"
+        f"/api/v1.0/start <br/>"
+        f"/api/v1.0/start/end"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -124,20 +128,50 @@ def tobs():
     return jsonify(tobs_dates)
 
 @app.route("/api/v1.0/<start>")
-def date_start():
+def date_start(start):
     # Create our session (link) from Python to the DB
     session = Session(bind=engine)
+
+    # Query for min, max, avg temps from start date onwards    
+    start_query = session.query(func.min(measurement.tobs), func.max(measurement.tobs), func.avg(measurement.tobs))\
+    .filter(measurement.station == "USC00519281").filter(measurement.date >= start).all()
+
+    # Reformat data in order to jsonify
+    start_list = []
+    for min, max, avg in start_query:
+        start_dict = {}
+        start_dict["min"] = min
+        start_dict["max"] = max
+        start_dict["avg"] = avg
+        start_list.append(start_dict)
+
     # Close our session
     session.close()
-    return jsonify()
+
+    return jsonify(start_list)
 
 @app.route("/api/v1.0/<start>/<end>")
-def date_start_end():
+def date_start_end(start, end):
     # Create our session (link) from Python to the DB
     session = Session(bind=engine)
+
+    # Query for min, max, avg temps from start date to end date
+    start_query = session.query(func.min(measurement.tobs), func.max(measurement.tobs), func.avg(measurement.tobs))\
+    .filter(measurement.station == "USC00519281").filter(measurement.date >= start).filter(measurement.date <= end).all()
+
+    # Reformat data in order to jsonify
+    start_end_list = []
+    for min, max, avg in start_query:
+        start_end_dict = {}
+        start_end_dict["min"] = min
+        start_end_dict["max"] = max
+        start_end_dict["avg"] = avg
+        start_end_list.append(start_end_dict)
+
     # Close our session
     session.close()
-    return jsonify()
+
+    return jsonify(start_end_list)
 
 
 if __name__ == "__main__":
