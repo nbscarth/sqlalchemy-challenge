@@ -1,3 +1,7 @@
+# Make sure directory is correct to run file
+import os
+os.chdir(os.path.dirname(__file__))
+
 # Import the dependencies.
 from flask import Flask, jsonify
 
